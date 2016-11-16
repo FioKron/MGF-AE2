@@ -59,11 +59,11 @@ public class PlayerBehavior : MonoBehaviour
 
     void MoveCrosshairX(float UpDownDirectionMagnitude)
     {
-
+        transform.Translate(0.0f, UpDownDirectionMagnitude, 0.0f);
     }
 
     void MoveCrosshairZ(float LeftRightDirectionMagnitude)
     {
-
+        transform.Translate(LeftRightDirectionMagnitude, 0.0f, 0.0f);
     }
 }
