@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections;
 
 public class PlayerBehavior : MonoBehaviour
 {
@@ -11,6 +10,9 @@ public class PlayerBehavior : MonoBehaviour
 
     // For altering the sensitivity of movement:
     const float MOVEMENT_MULTIPLYER = 0.1f;
+
+    // Player properties (that are shown to the Player):
+    float CurrentPowerLevel = 0.0f;
 
     // For debugging:
     float TestTimer = 0.0f;
@@ -35,6 +37,7 @@ public class PlayerBehavior : MonoBehaviour
 	// Handle Updates in the game:
 	void Update ()
     {
+        Message = "";
         TestTimer += Time.deltaTime;
 
         if (SystemInfo.supportsAccelerometer)
@@ -48,7 +51,7 @@ public class PlayerBehavior : MonoBehaviour
             //Message += "...time to adjust then...";
             //AdjustAimPointForPhoneAcceleration();
 
-            // Simply, one call to this function is all that is required, it seems: 
+            // Simply, one call to this function is all that is required, to move the Player as per the phone's acceleration: 
             transform.Translate(Input.acceleration.x * MOVEMENT_MULTIPLYER, Input.acceleration.y * MOVEMENT_MULTIPLYER, 0.0f);
         }
 
@@ -57,6 +60,17 @@ public class PlayerBehavior : MonoBehaviour
             TestTimer = 0.0f;
             Message = "";
         }
+
+        /** 
+            The Player is dragging their touch implement across the screen 
+            (if this is the case), so handle adjustment of power level:
+        */
+        /**if (Input.touchCount == 1)
+        {
+            HandlePowerLevelAdjustment();
+        }
+        */
+        Message += Input.touches[0].position;
     }
 
     /**
@@ -137,12 +151,30 @@ public class PlayerBehavior : MonoBehaviour
         }
 
         Message += FinalUpDownDirectionMagnitude;
-        return FinalUpDownDirectionMagnitude;
-        
+        return FinalUpDownDirectionMagnitude;       
     }
-    
-    
-    For testing:
+    */
+
+    // Adjust the power level as appropriate:
+    void HandlePowerLevelAdjustment()
+    {
+        // Check on the first and only touch input:
+        Touch ContactPoint = Input.touches[0];
+        Vector2 InitialContactPointPosition = ContactPoint.position;
+
+        // Check this input for movement:
+        if (ContactPoint.phase == TouchPhase.Moved)
+        {
+            Vector2 CurrentContactPointPosition = ContactPoint.position;
+            
+            if (CurrentContactPointPosition.y < InitialContactPointPosition.y)
+            {
+
+            }
+        }
+    }
+
+    // For testing and/or debugging: 
     void OnGUI()
     {
         // In order to set the font and its respective size:
@@ -151,5 +183,4 @@ public class PlayerBehavior : MonoBehaviour
 
         GUI.Label(new Rect(100, 10, 150, 100), Message, DebugStyle);
     }
-    */
 }
