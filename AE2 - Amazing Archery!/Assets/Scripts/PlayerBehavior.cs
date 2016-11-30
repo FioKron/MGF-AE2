@@ -9,6 +9,7 @@ public class PlayerBehavior : MonoBehaviour
     Vector3 LastPhoneAcceleration;
 
     // Handling power level adjustment:
+    Touch PointOfContact = new Touch();
     public Text PowerLevelLbl; // To refer to the power level label text
     Vector2 InitialPosition = new Vector2();
 
@@ -72,7 +73,7 @@ public class PlayerBehavior : MonoBehaviour
         // adjust the power level as appropriate (positivly or negativly):
         if ((Input.touches[0].phase == TouchPhase.Moved) && (Input.touchCount == 1))
         {
-            CurrentPowerLevel += (InitialPosition.y - Input.touches[0].position.y) * POWER_LEVEL_ADJUSTMENT_MULTIPLYER;
+            CurrentPowerLevel += InitialPosition.y - Input.touches[0].position.y;
 
             // Make sure the power level is within the correct range of values:
             ValidateCurrentPowerLevel();
@@ -115,7 +116,13 @@ public class PlayerBehavior : MonoBehaviour
         }
     }
 
-    // Only for the moment the screen is touched...
+    // Get the contact point, the moment the screen is touched once:
+    Touch GetContactPoint()
+    {
+        // return the contact point:
+        return Input.touches[0];
+    }
+
     void GetInitialTouchPosition()
     {
         /** 
@@ -123,12 +130,12 @@ public class PlayerBehavior : MonoBehaviour
        */
         if ((Input.touchCount == 1) && (Input.touches[0].phase == TouchPhase.Began))
         {
-            InitialPosition = Input.touches[0].position;
+            InitialPosition = GetContactPoint().position;
             //Message += "Contact Point Update";
         }
     }
 
-    // Only update this variable; if the validation process is successful:
+    // Only update this variable if the validation process, is successful:
     void UpdateCurrentPhoneAcceleration()
     {
         if (SystemInfo.supportsAccelerometer)
