@@ -132,6 +132,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="AE2 - Amazing Archery!.CSharp.Plugins.csproj">
+      <Project>{13A0CE95-4359-359F-13B4-56BDC2CDD0BF}</Project>
+      <Name>AE2 - Amazing Archery!.CSharp.Plugins</Name>
+    </ProjectReference>
     <ProjectReference Include="AE2 - Amazing Archery!.CSharp.csproj">
       <Project>{96542472-7F9D-BA36-E8C8-02E32B70FC3B}</Project>
       <Name>AE2 - Amazing Archery!.CSharp</Name>
@@ -139,6 +143,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\Editor\CrossPlatformInput\CrossPlatformInputInitialize.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Assets\Standard Assets\CrossPlatformInput\CrossPlatformInputGuidelines.txt" />
+    <None Include="Assets\Standard Assets\Prototyping\Shaders\WorldCoordDiffuse.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\SyntaxTree\UnityVS\2015\UnityVS.CSharp.targets" />
 </Project>

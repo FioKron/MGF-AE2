@@ -1,15 +1,16 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerBehavior : MonoBehaviour
 {
-    // The Phone's Acceleration in the real world (for detecting acceleration)
-    Vector3 PhoneAcceleration;
-
-    // To see if there was any alteration from the previous Acceleration
+    // For handling Player Movement:
+    Vector3 CurrentPhoneAcceleration;
     Vector3 LastPhoneAcceleration;
 
-    // For altering the sensitivity of movement:
-    const float MOVEMENT_MULTIPLYER = 0.1f;
+    // Handling power level adjustment:
+    public Text PowerLevelLbl; // To refer to the power level label text
+    Vector2 InitialPosition = new Vector2();
 
     // Player properties (that are shown to the Player):
     float CurrentPowerLevel = 0.0f;
@@ -18,12 +19,21 @@ public class PlayerBehavior : MonoBehaviour
     float TestTimer = 0.0f;
     string Message;
 
-    // Initilise this script:
+    // Constant values:
+    const float MOVEMENT_MULTIPLIER = 0.1f;
+    const float POWER_LEVEL_ADJUSTMENT_MULTIPLYER = 0.1f;
+
+    // Initilise initilisation:
     void Start ()
     {
-        // You are required to explicitly enable the gyro-sensor (Nick would not know why either):
-        //Input.gyro.enabled = true;
+        Initilise();       
+    }
 
+    // For handling initilisation:
+    void Initilise()
+    {
+        // Make sure the phone's orientation is not automatically updated
+        // (or this could lead to errors/difficulty in controling the game)
         Screen.orientation = ScreenOrientation.Portrait;
 
         // For checking in Update (to detect alterations):
@@ -33,144 +43,97 @@ public class PlayerBehavior : MonoBehaviour
             LastPhoneAcceleration = Input.acceleration;
         }
     }
-	
-	// Handle Updates in the game:
-	void Update ()
+
+    // Handle Updates in the game:
+    void Update ()
     {
-        Message = "";
         TestTimer += Time.deltaTime;
+        /**
+            Given Nick's advice, keep in mind the phase of input
+            plus only store the position for touches (the rest is not required)
+            
+            Keep in mind the order of execution, as well:    
+        */
 
-        if (SystemInfo.supportsAccelerometer)
+        // Handle Power Level Adjustment and movement of the Player:
+        GetInitialTouchPosition();
+        UpdateCurrentPhoneAcceleration();
+        MovePlayer();
+        UpdateCurrentPowerLevel();
+
+        // Handle Debugging:
+        HandleGameLoopDebugging();    
+    }
+
+    // Handle Power Level Adjustment:
+    void UpdateCurrentPowerLevel()
+    {
+        // Check if the one and only point of contact is in the movement phase and so;
+        // adjust the power level as appropriate (positivly or negativly):
+        if ((Input.touches[0].phase == TouchPhase.Moved) && (Input.touchCount == 1))
         {
-            //Message += "But this device supports a gyroscope...";
-            PhoneAcceleration = Input.acceleration;
+            CurrentPowerLevel += (InitialPosition.y - Input.touches[0].position.y) * POWER_LEVEL_ADJUSTMENT_MULTIPLYER;
+
+            // Make sure the power level is within the correct range of values:
+            ValidateCurrentPowerLevel();
+
+            PowerLevelLbl.text = CurrentPowerLevel.ToString();
         }
+    }
 
-        if (PhoneAcceleration != LastPhoneAcceleration)
-        {
-            //Message += "...time to adjust then...";
-            //AdjustAimPointForPhoneAcceleration();
-
-            // Simply, one call to this function is all that is required, to move the Player as per the phone's acceleration: 
-            transform.Translate(Input.acceleration.x * MOVEMENT_MULTIPLYER, Input.acceleration.y * MOVEMENT_MULTIPLYER, 0.0f);
-        }
-
-        if (TestTimer >= 1000.0f)
+    // Debugging handle:
+    void HandleGameLoopDebugging()
+    {
+        // Debugging Sub-System:
+        if (TestTimer >= MOVEMENT_MULTIPLIER)
         {
             TestTimer = 0.0f;
             Message = "";
         }
+    }
 
+    // If validation is successful...
+    void MovePlayer()
+    {
+        if (CurrentPhoneAcceleration != LastPhoneAcceleration)
+        {
+            // Simply, one call to this function is all that is required, to move the Player as per the phone's acceleration: 
+            transform.Translate(Input.acceleration.x * MOVEMENT_MULTIPLIER, Input.acceleration.y * MOVEMENT_MULTIPLIER, 0.0f);
+        }
+    }
+
+    // Make sure the power level is between 0 and 100
+    void ValidateCurrentPowerLevel()
+    {
+        if (CurrentPowerLevel > 100)
+        {
+            CurrentPowerLevel = 100;
+        }
+        else if (CurrentPowerLevel < 0)
+        {
+            CurrentPowerLevel = 0;
+        }
+    }
+
+    // Only for the moment the screen is touched...
+    void GetInitialTouchPosition()
+    {
         /** 
-            The Player is dragging their touch implement across the screen 
-            (if this is the case), so handle adjustment of power level:
-        */
-        /**if (Input.touchCount == 1)
+           Get the initial point of contact:
+       */
+        if ((Input.touchCount == 1) && (Input.touches[0].phase == TouchPhase.Began))
         {
-            HandlePowerLevelAdjustment();
+            InitialPosition = Input.touches[0].position;
+            //Message += "Contact Point Update";
         }
-        */
-        Message += Input.touches[0].position;
     }
 
-    /**
-    void AdjustAimPointForPhoneAcceleration()
+    // Only update this variable; if the validation process is successful:
+    void UpdateCurrentPhoneAcceleration()
     {
-        
-        Only analyse acceleration around the X and Z axes:
-        
-        float FinalLeftRightDirectionMagnitude = 0.0f;
-        float FinalUpDownDirectionMagnitude = 0.0f;
-
-        
-        // VOID
-        Obtain the different for pitch first 
-        // (moving the Player if there is a difference):
-        
-        Multiply to add or subtract a quaternion (a x b = c to add, Inverse(a) x b = c to subtract):
-
-        //Quaternion a;
-        //Quaternion b;
-        //Quaternion c = Quaternion.Inverse(a) * b;
-        
-
-        // Along Y first
-        // (Get the absolute value):
-        float UpDownDirectionMagnitude = Mathf.Abs(PhoneAcceleration.y - LastPhoneAcceleration.y);
-
-        //Message += PhoneAcceleration;//transform.position;//"CurrentAcceleration: " + PhoneAcceleration + " LastAcceleration: " + LastPhoneAcceleration;
-
-        if (UpDownDirectionMagnitude != 0.0f)
+        if (SystemInfo.supportsAccelerometer)
         {
-            FinalUpDownDirectionMagnitude = GetFinalUpDownDirectionMagnitude(UpDownDirectionMagnitude);
-        }
-
-        // Then X
-        // (Get the absolute value):
-        float LeftRightDirectionMagnitude = Mathf.Abs(PhoneAcceleration.x - LastPhoneAcceleration.x);
-
-        //Message += LeftRightDirectionMagnitude;
-
-        if (LeftRightDirectionMagnitude != 0.0f)
-        {
-            FinalLeftRightDirectionMagnitude = GetFinalLeftRightDirectionMagnitude(LeftRightDirectionMagnitude);          
-        }
-        //Message += "X: " + FinalLeftRightDirectionMagnitude + " Y: " + FinalUpDownDirectionMagnitude;
-        transform.Translate(FinalLeftRightDirectionMagnitude, FinalUpDownDirectionMagnitude, 0.0f);
-    }
-    
-    float GetFinalLeftRightDirectionMagnitude(float LeftRightDirectionMagnitude)
-    {
-        // For a 'normalised' direction:
-        float FinalLeftRightDirectionMagnitude = 0.0f;
-
-        if (LeftRightDirectionMagnitude > 0.0f)
-        {
-            FinalLeftRightDirectionMagnitude = LeftRightDirectionMagnitude * MOVEMENT_MULTIPLYER;
-        }
-        else if (LeftRightDirectionMagnitude < 0.0f)
-        {
-            FinalLeftRightDirectionMagnitude = -(LeftRightDirectionMagnitude) * MOVEMENT_MULTIPLYER;
-        }
-        Message += FinalLeftRightDirectionMagnitude;
-        return FinalLeftRightDirectionMagnitude;
-    }
-    
-    float GetFinalUpDownDirectionMagnitude(float UpDownDirectionMagnitude)
-    {
-        For a 'normalised' direction:
-        float FinalUpDownDirectionMagnitude = 0.0f;
-
-        if (UpDownDirectionMagnitude > 0.0f)
-        {
-            FinalUpDownDirectionMagnitude = UpDownDirectionMagnitude * MOVEMENT_MULTIPLYER;
-        }
-        else if (UpDownDirectionMagnitude < 0.0f)
-        {
-            FinalUpDownDirectionMagnitude = -(UpDownDirectionMagnitude) * MOVEMENT_MULTIPLYER;
-        }
-
-        Message += FinalUpDownDirectionMagnitude;
-        return FinalUpDownDirectionMagnitude;       
-    }
-    */
-
-    // Adjust the power level as appropriate:
-    void HandlePowerLevelAdjustment()
-    {
-        // Check on the first and only touch input:
-        Touch ContactPoint = Input.touches[0];
-        Vector2 InitialContactPointPosition = ContactPoint.position;
-
-        // Check this input for movement:
-        if (ContactPoint.phase == TouchPhase.Moved)
-        {
-            Vector2 CurrentContactPointPosition = ContactPoint.position;
-            
-            if (CurrentContactPointPosition.y < InitialContactPointPosition.y)
-            {
-
-            }
+            CurrentPhoneAcceleration = Input.acceleration;
         }
     }
 
